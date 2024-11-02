@@ -6,7 +6,7 @@
 
 const String defaultAlarm = "08:00";
 
-void saveSettings(String alarmTime) {
+void saveSettings(String newTime) {
     if (!SPIFFS.begin(true)) {
         Serial.println("Failed to mount file system");
         return;
@@ -14,7 +14,7 @@ void saveSettings(String alarmTime) {
 
     // Create a JSON document
     StaticJsonDocument<200> doc;
-    doc["alarmTime"] = alarmTime;
+    doc["alarmTime"] = newTime;
 
     // Open the file for writing
     File file = SPIFFS.open("/config.json", "w");
@@ -57,10 +57,10 @@ String loadSettings(bool retry) {
     }
 
     // Get the saved alarm time
-    String alarmTime = doc["alarmTime"].as<String>();
+    String savedTime = doc["alarmTime"].as<String>();
     Serial.print("Loaded Alarm Time: ");
-    Serial.println(alarmTime);
+    Serial.println(savedTime);
 
     file.close();
-    return alarmTime;
+    return savedTime;
 }

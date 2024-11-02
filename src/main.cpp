@@ -1,7 +1,7 @@
 #include <Arduino.h>
 // #include <FastLED.h>
-// #include <NTPClient.h>
-// #include <WiFiUdp.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #include "settings.h"
 #include "server.h"
@@ -11,8 +11,8 @@
 #define MAX_BRIGHTNESS 255 // Maximum brightness level
 
 
-// WiFiUDP ntpUDP;
-// NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000); // Adjust timezone offset as needed
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000); // Adjust timezone offset as needed
 bool alarmTriggered;
 
 // CRGB leds[NUM_LEDS];
@@ -22,8 +22,8 @@ int brightnessStep = MAX_BRIGHTNESS / 900; // Step size for brightness
 int currentBrightness = 0; // Start at 0 brightness
 
 
-// String getFormattedTime();
-// void gradualBrightening();
+String getFormattedTime();
+void gradualBrightening();
 
 
 void setup() {
@@ -31,27 +31,30 @@ void setup() {
 
     setupServer();
 
-    // timeClient.begin();
-    // timeClient.update();
+    timeClient.begin();
+    timeClient.update();
 
     // FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
     // FastLED.setBrightness(0);
 }
 
 void loop() {
-    // timeClient.update();
-    // String currentTime = getFormattedTime();
+    timeClient.update();
+    String currentTime = getFormattedTime();
+    String alarmTime = loadSettings(false);
 
-    // // Check if it's time to start the brightening sequence
-    // if (currentTime == alarmTime && !alarmTriggered) {
-    //     Serial.println("Alarm triggered! Starting brightening sequence.");
-    //     alarmTriggered = true; // Only trigger once
-    // }
+    // Check if it's time to start the brightening sequence
+    if (currentTime == alarmTime && !alarmTriggered) {
+        Serial.println("Alarm triggered! Starting brightening sequence.");
+        alarmTriggered = true; // Only trigger once
+    }
 
-    // // If alarm is triggered, run the gradual brightening sequence
-    // if (alarmTriggered) {
-    //     gradualBrightening();
-    // }
+    // If alarm is triggered, run the gradual brightening sequence
+    if (alarmTriggered) {
+        gradualBrightening();
+    }
+
+    delay(1000);
 
     //TODO Add alarm reset functionality
     //TODO Add day of the week checks
@@ -59,29 +62,33 @@ void loop() {
 
 
 // Function to get current time as a formatted string
-// String getFormattedTime() {
-//     int hours = timeClient.getHours();
-//     int minutes = timeClient.getMinutes();
-//     char timeStr[6];
-//     sprintf(timeStr, "%02d:%02d", hours, minutes);
-//     return String(timeStr);
-// }
+String getFormattedTime() {
+    int hours = timeClient.getHours();
+    int minutes = timeClient.getMinutes();
+    char timeStr[6];
+    sprintf(timeStr, "%02d:%02d", hours, minutes);
+    Serial.print("Current time ");
+    Serial.println(timeStr);
+    return String(timeStr);
+}
 
 // Gradual brightening sequence
-// void gradualBrightening() {
-//     unsigned long currentMillis = millis();
+void gradualBrightening() {
+    unsigned long currentMillis = millis();
 
-//     // Check if it's time to update brightness
-//     if (currentMillis - previousMillis >= interval && currentBrightness < MAX_BRIGHTNESS) {
-//         previousMillis = currentMillis;  // Save the last time we updated
+    // Check if it's time to update brightness
+    if (currentMillis - previousMillis >= interval && currentBrightness < MAX_BRIGHTNESS) {
+        previousMillis = currentMillis;  // Save the last time we updated
 
-//         // Increase brightness
-//         currentBrightness += brightnessStep;
-//         if (currentBrightness > MAX_BRIGHTNESS) currentBrightness = MAX_BRIGHTNESS;
+        // Increase brightness
+        currentBrightness += brightnessStep;
+        if (currentBrightness > MAX_BRIGHTNESS) currentBrightness = MAX_BRIGHTNESS;
 
-//         // Set brightness and update LEDs
-//         FastLED.setBrightness(currentBrightness);
-//         fill_solid(leds, NUM_LEDS, CRGB::White);
-//         FastLED.show();
-//     }
-// }
+        // Set brightness and update LEDs
+        Serial.print("Set brightness: ");
+        Serial.println(currentBrightness);
+        // FastLED.setBrightness(currentBrightness);
+        // fill_solid(leds, NUM_LEDS, CRGB::White);
+        // FastLED.show();
+    }
+}

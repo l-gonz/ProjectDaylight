@@ -10,7 +10,6 @@ const char* password = "Rhythm4Tist";
 
 
 AsyncWebServer server(80);
-String alarmTime;
 
 
 void setupWiFi() {
@@ -27,7 +26,7 @@ void setupServer() {
     setupWiFi();
     
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        alarmTime = loadSettings(true);
+        String alarmTime = loadSettings(true);
         request->send(200, "text/html", "<html><body>"
                                         "<h1>Set Alarm Time</h1>"
                                         "<p>Current alarm time: " + alarmTime + "</p>"
