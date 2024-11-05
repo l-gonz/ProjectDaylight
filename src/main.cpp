@@ -16,10 +16,9 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000); // Adjust timezone of
 bool alarmTriggered;
 
 // CRGB leds[NUM_LEDS];
-unsigned long previousMillis = 0; // Stores the last time we updated
 const unsigned long interval = 1000; // Update every 1 second
-int brightnessStep = MAX_BRIGHTNESS / 900; // Step size for brightness
-int currentBrightness = 0; // Start at 0 brightness
+float brightnessStep = MAX_BRIGHTNESS / (15 * 60.0); // Step size for brightness
+float currentBrightness = 0; // Start at 0 brightness
 
 
 String getFormattedTime();
@@ -54,7 +53,7 @@ void loop() {
         gradualBrightening();
     }
 
-    delay(1000);
+    delay(interval);
 
     //TODO Add alarm reset functionality
     //TODO Add day of the week checks
@@ -74,21 +73,19 @@ String getFormattedTime() {
 
 // Gradual brightening sequence
 void gradualBrightening() {
-    unsigned long currentMillis = millis();
+    // Increase brightness
+    currentBrightness += brightnessStep;
 
-    // Check if it's time to update brightness
-    if (currentMillis - previousMillis >= interval && currentBrightness < MAX_BRIGHTNESS) {
-        previousMillis = currentMillis;  // Save the last time we updated
+    // Set brightness and update LEDs
+    Serial.print("Set brightness: ");
+    Serial.println(currentBrightness);
+    // FastLED.setBrightness(currentBrightness);
+    // fill_solid(leds, NUM_LEDS, CRGB::White);
+    // FastLED.show();
 
-        // Increase brightness
-        currentBrightness += brightnessStep;
-        if (currentBrightness > MAX_BRIGHTNESS) currentBrightness = MAX_BRIGHTNESS;
-
-        // Set brightness and update LEDs
-        Serial.print("Set brightness: ");
-        Serial.println(currentBrightness);
-        // FastLED.setBrightness(currentBrightness);
-        // fill_solid(leds, NUM_LEDS, CRGB::White);
-        // FastLED.show();
-    }
+    if (currentBrightness > MAX_BRIGHTNESS)
+    {
+        currentBrightness = 0;
+        alarmTriggered = false;
+    } 
 }
